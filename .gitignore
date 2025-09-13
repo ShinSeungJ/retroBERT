@@ -166,8 +166,12 @@ ckpts/**/*.pth                  # Exclude PyTorch model files
 dataset/fold/**/*.csv           # Exclude CSV data files
 dataset/fold/**/                # Exclude all fold subdirectories with data
 !dataset/fold/README.md         # Keep README in fold directory
-!dataset/AVATAR_SDSBD.xlsx      # Keep labels file (30MB)
+!dataset/SIratio.xlsx           # Keep labels file
 !dataset/demo/                  # Keep demo directory and all its contents
+
+# LibreOffice/OpenOffice lock files
+.~lock.*#
+*.~lock.*#
 
 # Temporary files
 *.tmp
