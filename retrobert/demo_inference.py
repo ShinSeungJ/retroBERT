@@ -50,7 +50,7 @@ def main():
     
     # Dataset paths
     BASE_DATA_DIR = os.path.join("dataset")
-    label_file = os.path.join(BASE_DATA_DIR, "AVATAR_SDSBD.xlsx")
+    label_file = os.path.join(BASE_DATA_DIR, "SIratio.xlsx")
     save_dataset_dir = os.path.join(BASE_DATA_DIR, 'fold')
     
     # Pre-trained model base directory

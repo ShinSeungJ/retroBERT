@@ -110,7 +110,7 @@ def setup_kfold_experiment(args, num_folds=4):
 
     susceptible_dir = os.path.join(BASE_DATA_DIR, 'preS')
     resilient_dir = os.path.join(BASE_DATA_DIR, 'preR')
-    label_file = os.path.join(BASE_DATA_DIR, "AVATAR_SDSBD.xlsx")
+    label_file = os.path.join(BASE_DATA_DIR, "SIratio.xlsx")
     save_dataset_dir = os.path.join(BASE_DATA_DIR, 'fold')
 
     create_k_fold_directories(save_dataset_dir, num_folds)

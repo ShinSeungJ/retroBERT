@@ -77,7 +77,7 @@ def main_command(args):
     # Validate dataset directory
     if not validate_path(args.data_dir):
         print("Please ensure your dataset directory contains:")
-        print("  - AVATAR_SDSBD.xlsx (labels file)")
+        print("  - SIratio.xlsx (labels file)")
         print("  - fold/ directory with k-fold split data")
         return
     
@@ -218,7 +218,7 @@ def main():
     
     # Demo dataset paths
     demo_unified_dir = "dataset/demo/unified"
-    demo_label_file = "dataset/demo/AVATAR_SDSBD_demo.csv"
+    demo_label_file = "dataset/demo/SIratio_demo.csv"
     
     # Create unified demo directory
     os.makedirs(demo_unified_dir, exist_ok=True)
@@ -349,7 +349,7 @@ def create_demo_dataset():
         df.to_csv(f"{demo_dir}/preR/demo_r_{i}.csv", index=False, header=False)
     
     # Create labels file
-    labels_content = """file_name,label
+    labels_content = """name,group
 demo_s_1,susceptible
 demo_s_2,susceptible
 demo_s_3,susceptible
@@ -357,7 +357,7 @@ demo_r_1,resilient
 demo_r_2,resilient
 demo_r_3,resilient"""
     
-    with open(f"{demo_dir}/AVATAR_SDSBD_demo.csv", "w") as f:
+    with open(f"{demo_dir}/SIratio_demo.csv", "w") as f:
         f.write(labels_content)
     
     print("✅ Demo dataset created successfully!")

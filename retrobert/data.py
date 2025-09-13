@@ -31,10 +31,10 @@ class retroBERTdataset(Dataset):
 
         # Load labels from Excel or CSV file
         if label_file.endswith('.csv'):
-            label_df = pd.read_csv(label_file, usecols=["file_name", "label"])
+            label_df = pd.read_csv(label_file, usecols=["name", "group"])
         else:
-            label_df = pd.read_excel(label_file, usecols=["file_name", "label"])
-        label_mapping = label_df.set_index('file_name')['label'].to_dict()
+            label_df = pd.read_excel(label_file, usecols=["name", "group"])
+        label_mapping = label_df.set_index('name')['group'].to_dict()
 
         # Map labels to binary format
         for key in label_mapping:

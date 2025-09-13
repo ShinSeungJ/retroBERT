@@ -26,7 +26,7 @@ def main():
     args.save_model_path = os.path.join(args.output_dir, args.exp_name)
         
     BASE_DATA_DIR = os.path.join("dataset")
-    label_file = os.path.join(BASE_DATA_DIR, "AVATAR_SDSBD.xlsx")
+    label_file = os.path.join(BASE_DATA_DIR, "SIratio.xlsx")
     save_dataset_dir = os.path.join(BASE_DATA_DIR, 'fold')
 
     results = initialize_kfold_results()

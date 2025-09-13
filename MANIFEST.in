@@ -9,7 +9,7 @@ recursive-include retrobert *.py
 
 # Include demo data (small subset)
 recursive-include dataset/demo *.csv
-include dataset/demo/AVATAR_SDSBD_demo.xlsx
+include dataset/demo/SIratio_demo.csv
 
 # Include pre-trained models for demo
 recursive-include outputs/trained *.pth.tar
