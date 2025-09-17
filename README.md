@@ -1,7 +1,7 @@
 # retroBERT: Stress Susceptibility Prediction using BERT-based Deep Learning
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
-[![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
+[![Python 3.9+](https://img.shields.io/badge/python-3.9+-blue.svg)](https://www.python.org/downloads/)
 [![PyTorch](https://img.shields.io/badge/PyTorch-1.9+-red.svg)](https://pytorch.org/)
 
 ## Overview
@@ -14,7 +14,7 @@ retroBERT is a deep learning framework that leverages BERT (Bidirectional Encode
 ```bash
 git clone https://github.com/ShinSeungJ/retroBERT.git
 cd retroBERT
-conda create -n retrobert python=3.8
+conda create -n retrobert python=3.9
 conda activate retrobert
 pip install -e .
 python setup_retrobert.py
@@ -26,7 +26,7 @@ retrobert demo_inference
 ```bash
 git clone https://github.com/ShinSeungJ/retroBERT.git
 cd retroBERT
-conda create -n retrobert python=3.8
+conda create -n retrobert python=3.9
 conda activate retrobert
 pip install -e .
 python setup_retrobert.py --dataset-only
@@ -36,14 +36,14 @@ retrobert main
 
 ### ⚡ Quick Start (if conda already installed)
 ```bash
-git clone https://github.com/ShinSeungJ/retroBERT.git && cd retroBERT && conda create -n retrobert python=3.8 && conda activate retrobert && pip install -e . && python setup_retrobert.py && retrobert demo_inference
+git clone https://github.com/ShinSeungJ/retroBERT.git && cd retroBERT && conda create -n retrobert python=3.9 && conda activate retrobert && pip install -e . && python setup_retrobert.py && retrobert demo_inference
 ```
 
 ## System Requirements
 
 ### Software Dependencies
 
-- **Python**: 3.8 or higher
+- **Python**: 3.9 or higher (recommended), 3.8+ supported
 - **PyTorch**: 1.9.0 or higher
 - **Transformers**: 4.21.0 or higher (Hugging Face)
 - **NumPy**: 1.21.0 or higher
@@ -97,8 +97,8 @@ bash Miniconda3-latest-MacOSX-x86_64.sh
 git clone https://github.com/ShinSeungJ/retroBERT.git
 cd retroBERT
 
-# Create conda environment with Python 3.8
-conda create -n retrobert python=3.8
+# Create conda environment with Python 3.9
+conda create -n retrobert python=3.9
 conda activate retrobert
 
 # Install package and dependencies
@@ -134,7 +134,7 @@ python setup_retrobert.py --dataset-only
 # Step 1: Clone and install
 git clone https://github.com/ShinSeungJ/retroBERT.git
 cd retroBERT
-conda create -n retrobert python=3.8
+conda create -n retrobert python=3.9
 conda activate retrobert
 pip install -e .
 
@@ -151,7 +151,7 @@ retrobert demo_inference
 # Step 1: Clone and install
 git clone https://github.com/ShinSeungJ/retroBERT.git
 cd retroBERT
-conda create -n retrobert python=3.8
+conda create -n retrobert python=3.9
 conda activate retrobert
 pip install -e .
 
@@ -168,7 +168,7 @@ retrobert main
 # Step 1: Clone and install
 git clone https://github.com/ShinSeungJ/retroBERT.git
 cd retroBERT
-conda create -n retrobert python=3.8
+conda create -n retrobert python=3.9
 conda activate retrobert
 pip install -e .
 
