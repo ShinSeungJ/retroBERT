@@ -14,9 +14,9 @@ retroBERT is a deep learning framework that leverages BERT (Bidirectional Encode
 ```bash
 git clone https://github.com/ShinSeungJ/retroBERT.git
 cd retroBERT
-pip install -r requirements.txt
+pip install -e .
 python setup_retrobert.py
-python run_retrobert.py demo_inference
+retrobert demo_inference
 ```
 **Expected time**: ~10-15 minutes total
 
@@ -24,15 +24,15 @@ python run_retrobert.py demo_inference
 ```bash
 git clone https://github.com/ShinSeungJ/retroBERT.git
 cd retroBERT
-pip install -r requirements.txt
+pip install -e .
 python setup_retrobert.py --dataset-only
-python run_retrobert.py main
+retrobert main
 ```
 **Expected time**: ~2-4 hours for full k-fold training
 
 ### ⚡ One-Line Quick Start
 ```bash
-git clone https://github.com/ShinSeungJ/retroBERT.git && cd retroBERT && pip install -r requirements.txt && python setup_retrobert.py && python run_retrobert.py demo_inference
+git clone https://github.com/ShinSeungJ/retroBERT.git && cd retroBERT && pip install -e . && python setup_retrobert.py && retrobert demo_inference
 ```
 
 ## System Requirements
@@ -77,8 +77,8 @@ cd retroBERT
 python -m venv retrobert_env
 source retrobert_env/bin/activate  # On Windows: retrobert_env\Scripts\activate
 
-# Install dependencies
-pip install -r requirements.txt
+# Install package and dependencies
+pip install -e .
 ```
 
 ### Option 2: Using conda
@@ -92,8 +92,8 @@ cd retroBERT
 conda create -n retrobert python=3.8
 conda activate retrobert
 
-# Install dependencies
-pip install -r requirements.txt
+# Install package and dependencies
+pip install -e .
 ```
 
 ### Typical Installation Time
@@ -125,13 +125,13 @@ python setup_retrobert.py --dataset-only
 # Step 1: Clone and install
 git clone https://github.com/ShinSeungJ/retroBERT.git
 cd retroBERT
-pip install -r requirements.txt
+pip install -e .
 
 # Step 2: Download pre-trained models and dataset
 python setup_retrobert.py
 
 # Step 3: Run inference to get paper results
-python run_retrobert.py demo_inference
+retrobert demo_inference
 ```
 **Timeline**: Setup (5-10 min) + Download (2-5 min) + Inference (2-5 min) = **~10-20 minutes total**
 
@@ -140,13 +140,13 @@ python run_retrobert.py demo_inference
 # Step 1: Clone and install
 git clone https://github.com/ShinSeungJ/retroBERT.git
 cd retroBERT
-pip install -r requirements.txt
+pip install -e .
 
 # Step 2: Download dataset only
 python setup_retrobert.py --dataset-only
 
 # Step 3: Run full k-fold cross-validation training
-python run_retrobert.py main
+retrobert main
 ```
 **Timeline**: Setup (5-10 min) + Download (1-3 min) + Training (2-4 hours) = **~2-4 hours total**
 
@@ -155,10 +155,10 @@ python run_retrobert.py main
 # Step 1: Clone and install
 git clone https://github.com/ShinSeungJ/retroBERT.git
 cd retroBERT
-pip install -r requirements.txt
+pip install -e .
 
 # Step 2: Run demo training (creates demo data automatically)
-python run_retrobert.py demo
+retrobert demo
 ```
 **Timeline**: Setup (5-10 min) + Demo training (5-10 min) = **~10-20 minutes total**
 
@@ -167,7 +167,7 @@ python run_retrobert.py demo
 The CLI automatically detects missing files and offers to download them:
 
 ```bash
-python run_retrobert.py demo_inference
+retrobert demo_inference
 # ⚠️  Missing required files:
 #    - Pre-trained models (ckpts directory)
 #    - Dataset (dataset/fold directory)
@@ -183,12 +183,12 @@ After setup, you can run scripts in multiple ways:
 
 ```bash
 # Using CLI (recommended)
-python run_retrobert.py demo_inference
-python run_retrobert.py main
+retrobert demo_inference
+retrobert main
 
-# Using direct script execution
-python retrobert/demo_inference.py
-python -m retrobert.main
+# Using console entry points (alternative)
+retrobert-demo-inference
+retrobert-main
 
 # After pip installation
 retrobert demo_inference
@@ -256,8 +256,8 @@ python download_dataset.py
 #### Missing Dependencies
 If you get import errors:
 ```bash
-# Reinstall dependencies
-pip install -r requirements.txt
+# Reinstall package and dependencies
+pip install -e .
 
 # Or install specific missing packages
 pip install huggingface-hub transformers torch

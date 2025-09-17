@@ -34,12 +34,12 @@ def get_version():
 setup(
     name="retrobert",
     version=get_version(),
-    author="Your Name",  # Replace with actual author name
-    author_email="your.email@institution.edu",  # Replace with actual email
+    author="ShinSeungJ",
+    author_email="contact@example.com",  # Replace with your actual email if desired
     description="Stress Susceptibility Prediction using BERT-based Deep Learning",
     long_description=read_readme(),
     long_description_content_type="text/markdown",
-    url="https://github.com/yourusername/retroBERT",  # Replace with actual repository URL
+    url="https://github.com/ShinSeungJ/retroBERT",
     packages=find_packages(),
     classifiers=[
         "Development Status :: 4 - Beta",
@@ -85,8 +85,8 @@ setup(
     zip_safe=False,
     keywords="deep learning, BERT, stress prediction, behavioral analysis, time series",
     project_urls={
-        "Bug Reports": "https://github.com/yourusername/retroBERT/issues",
-        "Source": "https://github.com/yourusername/retroBERT",
-        "Documentation": "https://github.com/yourusername/retroBERT#readme",
+        "Bug Reports": "https://github.com/ShinSeungJ/retroBERT/issues",
+        "Source": "https://github.com/ShinSeungJ/retroBERT",
+        "Documentation": "https://github.com/ShinSeungJ/retroBERT#readme",
     },
 )
