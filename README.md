@@ -14,6 +14,8 @@ retroBERT is a deep learning framework that leverages BERT (Bidirectional Encode
 ```bash
 git clone https://github.com/ShinSeungJ/retroBERT.git
 cd retroBERT
+conda create -n retrobert python=3.8
+conda activate retrobert
 pip install -e .
 python setup_retrobert.py
 retrobert demo_inference
@@ -24,15 +26,17 @@ retrobert demo_inference
 ```bash
 git clone https://github.com/ShinSeungJ/retroBERT.git
 cd retroBERT
+conda create -n retrobert python=3.8
+conda activate retrobert
 pip install -e .
 python setup_retrobert.py --dataset-only
 retrobert main
 ```
 **Expected time**: ~2-4 hours for full k-fold training
 
-### ⚡ One-Line Quick Start
+### ⚡ Quick Start (if conda already installed)
 ```bash
-git clone https://github.com/ShinSeungJ/retroBERT.git && cd retroBERT && pip install -e . && python setup_retrobert.py && retrobert demo_inference
+git clone https://github.com/ShinSeungJ/retroBERT.git && cd retroBERT && conda create -n retrobert python=3.8 && conda activate retrobert && pip install -e . && python setup_retrobert.py && retrobert demo_inference
 ```
 
 ## System Requirements
@@ -66,29 +70,34 @@ The software has been tested on:
 
 ## Installation Guide
 
-### Option 1: Using pip (Recommended)
+### Prerequisites: Install Conda
 
+If you don't have conda installed, install it first:
+
+**Miniconda (Recommended - lighter)**
 ```bash
-# Clone the repository
-git clone https://github.com/ShinSeungJ/retroBERT.git
-cd retroBERT
+# Linux
+wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh
+bash Miniconda3-latest-Linux-x86_64.sh
 
-# Create a virtual environment (recommended)
-python -m venv retrobert_env
-source retrobert_env/bin/activate  # On Windows: retrobert_env\Scripts\activate
+# macOS
+wget https://repo.anaconda.com/miniconda/Miniconda3-latest-MacOSX-x86_64.sh
+bash Miniconda3-latest-MacOSX-x86_64.sh
 
-# Install package and dependencies
-pip install -e .
+# Windows: Download from https://docs.conda.io/en/latest/miniconda.html
 ```
 
-### Option 2: Using conda
+**Or Anaconda (Full distribution)**
+- Download from: https://www.anaconda.com/products/distribution
+
+### Installation Steps
 
 ```bash
 # Clone the repository
 git clone https://github.com/ShinSeungJ/retroBERT.git
 cd retroBERT
 
-# Create conda environment
+# Create conda environment with Python 3.8
 conda create -n retrobert python=3.8
 conda activate retrobert
 
@@ -125,6 +134,8 @@ python setup_retrobert.py --dataset-only
 # Step 1: Clone and install
 git clone https://github.com/ShinSeungJ/retroBERT.git
 cd retroBERT
+conda create -n retrobert python=3.8
+conda activate retrobert
 pip install -e .
 
 # Step 2: Download pre-trained models and dataset
@@ -140,6 +151,8 @@ retrobert demo_inference
 # Step 1: Clone and install
 git clone https://github.com/ShinSeungJ/retroBERT.git
 cd retroBERT
+conda create -n retrobert python=3.8
+conda activate retrobert
 pip install -e .
 
 # Step 2: Download dataset only
@@ -155,10 +168,12 @@ retrobert main
 # Step 1: Clone and install
 git clone https://github.com/ShinSeungJ/retroBERT.git
 cd retroBERT
+conda create -n retrobert python=3.8
+conda activate retrobert
 pip install -e .
 
 # Step 2: Run demo training (creates demo data automatically)
-retrobert demo
+python run_retrobert.py demo
 ```
 **Timeline**: Setup (5-10 min) + Demo training (5-10 min) = **~10-20 minutes total**
 
@@ -186,9 +201,9 @@ After setup, you can run scripts in multiple ways:
 retrobert demo_inference
 retrobert main
 
-# Using console entry points (alternative)
-retrobert-demo-inference
-retrobert-main
+# Using direct script execution
+python retrobert/demo_inference.py
+python -m retrobert.main
 
 # After pip installation
 retrobert demo_inference
