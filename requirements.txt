@@ -1,0 +1,18 @@
+# retroBERT dependencies
+# Versions below are the ones the reported runs were produced with.
+
+# Core deep learning framework
+torch==2.11.0
+
+# Transformers library for BERT
+transformers==5.8.0
+
+# Data processing and numerical computing
+numpy==2.2.6
+pandas==2.3.3
+
+# Machine learning utilities
+scikit-learn==1.7.2
+
+# Excel file support (label table)
+openpyxl==3.1.5
