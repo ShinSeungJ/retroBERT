@@ -1,0 +1,23 @@
+# ---- run artifacts ----
+# dataset/ IS tracked: the motion and pose CSVs plus label tables ship with the repo.
+# What must stay out is the fold directories the training script regenerates on every
+# run -- it wipes and rebuilds them, and they are ~1.4 GB of copies of data already
+# tracked above.
+dataset/**/cohort_strat_fold*/
+outputs/
+*.pth.tar
+*.pt
+wandb/
+
+# ---- python ----
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# ---- editor / OS cruft ----
+.DS_Store
+.~lock.*#
+.vscode/
+.idea/
