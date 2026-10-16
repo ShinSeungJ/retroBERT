@@ -67,6 +67,12 @@ def add_default_args(parser):
                              "window. 'none' is the real experiment.")
     parser.add_argument('--shuffle_seed', type=int, default=42,
                         help='Seed for the active shuffle, independent of --seed.')
+    parser.add_argument('--shuffle_scope', type=str, default='fit',
+                        choices=['fit', 'all'],
+                        help="Which splits a sequence shuffle permutes. 'fit' permutes the "
+                             "train and validation windows and scores the held-out test "
+                             "windows in their true order; 'all' permutes the test windows "
+                             "as well. Only applies to --shuffle sequences.")
     parser.add_argument('--early_stop_patience', type=int, default=10,
                         help='Stop training when neither the validation loss nor F1 has '
                              'improved for this many epochs. 0 disables early stopping.')
@@ -90,23 +96,43 @@ def resolve_args(args):
         raise ValueError("--max_seq_length must be >= 2 (one [CLS] token plus >=1 frame)")
     args.num_frames = args.max_seq_length - 1
 
+    if args.shuffle_scope == 'all' and args.shuffle != 'sequences':
+        raise ValueError("--shuffle_scope all applies only to --shuffle sequences; a label "
+                         "shuffle always scores the held-out test set with its true labels")
+
     args.exp_name = run_name(args.exp_name, args.cohort, args.seed,
-                             args.shuffle, args.shuffle_seed)
+                             args.shuffle, args.shuffle_seed, args.shuffle_scope)
     args.device = "cuda" if torch.cuda.is_available() else "cpu"
     args.save_model_path = os.path.join(args.output_dir, args.exp_name)
     return args
 
 
-def run_name(exp, cohort, seed, shuffle='none', shuffle_seed=42):
+def run_name(exp, cohort, seed, shuffle='none', shuffle_seed=42, shuffle_scope='fit'):
     """The output directory name of one run. The aggregator looks runs up by this exact
     name, so a shuffle control can never be mistaken for the real run of the same seed,
-    and the cohort is part of it so a male and a female run never share a directory."""
+    and the cohort is part of it so a male and a female run never share a directory.
+    A sequence shuffle also carries its scope, so its 'fit' and 'all' variants never
+    share a directory either."""
     name = f"{exp}_{cohort}_{seed}"
     if shuffle == 'labels':
         name = f"{name}_shuffle{shuffle_seed}"
     elif shuffle == 'sequences':
-        name = f"{name}_seqshuffle{shuffle_seed}"
+        name = f"{name}_seqshuffle{shuffle_seed}_{shuffle_scope}"
     return name
+
+
+def shuffle_description(shuffle, shuffle_seed, shuffle_scope='fit'):
+    """One-line description of a run's shuffle control, for logs and the metrics file."""
+    if shuffle == 'none':
+        return 'none (real experiment)'
+    if shuffle == 'sequences':
+        return f"sequences (seed={shuffle_seed}, scope={shuffle_scope})"
+    return f"{shuffle} (seed={shuffle_seed})"
+
+
+def test_order_description(shuffled, shuffle_seed):
+    """How the held-out test windows were ordered when they were scored."""
+    return f"shuffled (seed={shuffle_seed})" if shuffled else 'intact'
 
 
 def default_exp_name():

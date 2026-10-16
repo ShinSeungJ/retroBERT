@@ -10,6 +10,7 @@ from contextlib import contextmanager
 import numpy as np
 import torch
 
+from .config import shuffle_description, test_order_description
 from .metric import mean_sd, pairwise_pooled_auc, pooled_auc_metrics, pooled_pair_metrics
 
 # --- stream plumbing ---------------------------------------------------------
@@ -67,6 +68,21 @@ def print_banner(title, width=92, ch='='):
 def print_fold_header(fold, num_folds, test_cohort, save_model_path):
     print_banner(f"FOLD {fold}/{num_folds} | test cohort={test_cohort} | "
                  f"Checkpoints: {save_model_path}", width=100, ch='=')
+
+
+def print_evaluation_header(run_dir, checkpoint, shuffle, test_order, eval_dir):
+    print_banner("RE-SCORING A TRAINED RUN (no training)", width=100, ch='=')
+    print(f"  Run                  : {run_dir}")
+    print(f"  Checkpoint           : {checkpoint} (per fold)")
+    print(f"  Shuffle control      : {shuffle}")
+    print(f"  Test windows         : {test_order}")
+    print(f"  Results              : {eval_dir}")
+
+
+def print_missing_run(path):
+    print(f"Error: no trained checkpoint at {path}")
+    print("Train the run first, or pass the same --exp_name / --cohort / --seed / "
+          "--shuffle / --shuffle_seed / --shuffle_scope it was trained with.")
 
 
 def print_scheduler_steps(fold, total_training_steps, warmup_steps, warmup_ratio):
@@ -218,9 +234,10 @@ def print_hyperparameters(args, loss_name, fold_warmup_steps_log, fold_total_ste
     print(f"  Spine scale          : {args.spine_scale}")
     print(f"  Standard scaler      : {args.use_standard_scaler}")
     print(f"  Train/val ratio      : {args.train_val_ratio}")
-    shuffle = ('none (real experiment)' if args.shuffle == 'none'
-               else f"{args.shuffle} (seed={args.shuffle_seed})")
-    print(f"  Shuffle control      : {shuffle}")
+    print(f"  Shuffle control      : "
+          f"{shuffle_description(args.shuffle, args.shuffle_seed, args.shuffle_scope)}")
+    test_shuffled = args.shuffle == 'sequences' and args.shuffle_scope == 'all'
+    print(f"  Test windows         : {test_order_description(test_shuffled, args.shuffle_seed)}")
     print(f"  Early stop patience  : {args.early_stop_patience if args.early_stop_patience > 0 else 'disabled'}")
 
 
@@ -254,6 +271,9 @@ def print_aggregate(records, width=64):
     print(f"  Folds per seed       : {first['num_folds']}")
     print(f"  Seeds                : {seeds}")
     print(f"  Shuffle control      : {first['shuffle']}")
+    # Older metrics files predate the field; their test windows were scored in order
+    # unless the run was a sequence shuffle.
+    print(f"  Test windows         : {first.get('test_order', 'not recorded')}")
     print(f"  +/- is sample SD (ddof=1) across seeds")
     print(f"{'-'*width}")
     print(f"{'Model':<14} {'Acc':<15} {'F1':<15} {'AUROC'}")

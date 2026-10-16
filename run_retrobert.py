@@ -13,8 +13,14 @@ Examples
     # a negative control
     python run_retrobert.py train --shuffle sequences
 
+    # the same control with the held-out test windows shuffled as well
+    python run_retrobert.py train --shuffle sequences --shuffle-scope all
+
     # a single seed, into a named experiment directory
     python run_retrobert.py train --seeds 42 --exp-name my_run
+
+    # re-score trained real runs with their test windows shuffled (no retraining)
+    python run_retrobert.py evaluate --seeds 17 23 41 68 92
 """
 
 import argparse
@@ -86,29 +92,74 @@ def train_command(args):
             cmd.append(f"--shuffle={args.shuffle}")
         if args.shuffle_seed is not None:
             cmd.append(f"--shuffle_seed={args.shuffle_seed}")
+        if args.shuffle_scope:
+            cmd.append(f"--shuffle_scope={args.shuffle_scope}")
         cmd.extend(args.passthrough)
 
-        print("=" * 60)
-        print(f"seed={seed}")
-        print(" ".join(cmd))
-        print("=" * 60)
-
-        if args.dry_run:
-            continue
-        # flush first, or the child's output overtakes this header when stdout is piped
-        sys.stdout.flush()
-        result = subprocess.run(cmd)
-        if result.returncode != 0:
-            print(f"Run failed for seed={seed} (exit {result.returncode}); stopping.")
-            return result.returncode
+        if not run_seed(cmd, seed, args.dry_run):
+            return 1
 
     if args.dry_run:
         return 0
     return aggregate_seeds(seeds, args)
 
 
-def aggregate_seeds(seeds, args):
-    """Combine the seeds just trained into one mean +/- SD table."""
+def run_seed(cmd, seed, dry_run):
+    """Print one seed's command and run it. Returns False if it failed."""
+    print("=" * 60)
+    print(f"seed={seed}")
+    print(" ".join(cmd))
+    print("=" * 60)
+
+    if dry_run:
+        return True
+    # flush first, or the child's output overtakes this header when stdout is piped
+    sys.stdout.flush()
+    result = subprocess.run(cmd)
+    if result.returncode != 0:
+        print(f"Run failed for seed={seed} (exit {result.returncode}); stopping.")
+        return False
+    return True
+
+
+def evaluate_command(args):
+    """Re-score trained runs on their held-out cohorts, once per seed, then aggregate."""
+    if not validate_dataset(args.cohort or 'male'):
+        return 1
+
+    print(f"retroBERT: re-scoring {len(args.seeds)} trained seed(s) with "
+          f"{args.test_order} test windows: {', '.join(map(str, args.seeds))}")
+
+    for seed in args.seeds:
+        cmd = [sys.executable, "-m", "retrobert.evaluate", f"--seed={seed}",
+               f"--test_order={args.test_order}",
+               f"--test_shuffle_seed={args.test_shuffle_seed}"]
+        if args.exp_name:
+            cmd.append(f"--exp_name={args.exp_name}")
+        if args.output_dir:
+            cmd.append(f"--output_dir={args.output_dir}")
+        if args.cohort:
+            cmd.append(f"--cohort={args.cohort}")
+        if args.shuffle:
+            cmd.append(f"--shuffle={args.shuffle}")
+        if args.shuffle_seed is not None:
+            cmd.append(f"--shuffle_seed={args.shuffle_seed}")
+        if args.shuffle_scope:
+            cmd.append(f"--shuffle_scope={args.shuffle_scope}")
+        cmd.extend(args.passthrough)
+
+        if not run_seed(cmd, seed, args.dry_run):
+            return 1
+
+    if args.dry_run:
+        return 0
+    from retrobert.evaluate import eval_dir_name
+    return aggregate_seeds(args.seeds, args,
+                           eval_dir_name(args.test_order, args.test_shuffle_seed))
+
+
+def aggregate_seeds(seeds, args, results_dir='fold_results'):
+    """Combine the seeds just run into one mean +/- SD table."""
     from retrobert.aggregate import aggregate, find_metrics
     from retrobert.config import default_exp_name
 
@@ -119,7 +170,8 @@ def aggregate_seeds(seeds, args):
     print("=" * 60)
     shuffle_seed = 42 if args.shuffle_seed is None else args.shuffle_seed
     paths = find_metrics(exp, args.cohort or 'male', seeds, output_dir,
-                         args.shuffle or 'none', shuffle_seed)
+                         args.shuffle or 'none', shuffle_seed,
+                         args.shuffle_scope or 'fit', results_dir)
     return 0 if aggregate(paths) else 1
 
 
@@ -154,12 +206,42 @@ def main():
                                    "'sequences' destroys temporal order (default: none)")
     train_parser.add_argument("--shuffle-seed", type=int,
                               help="Seed for the active shuffle (default: 42)")
+    train_parser.add_argument("--shuffle-scope", type=str, choices=['fit', 'all'],
+                              help="Splits a sequence shuffle permutes: 'fit' = train and "
+                                   "validation, test kept in order; 'all' = test as well "
+                                   "(default: fit)")
     train_parser.add_argument("--early-stop-patience", type=int,
                               help="Stop after this many epochs in which neither the "
                                    "validation loss nor F1 improved; 0 disables it "
                                    "(default: 10)")
     train_parser.add_argument("--dry-run", action="store_true",
                               help="Print the commands without running them")
+
+    eval_parser = subparsers.add_parser(
+        "evaluate", help="Re-score trained runs on their held-out cohorts, optionally "
+                         "with shuffled test windows (no retraining)")
+    eval_parser.add_argument("--seeds", type=int, nargs="+", required=True,
+                             help="Seeds of the trained runs to re-score")
+    eval_parser.add_argument("--test-order", type=str, choices=['shuffled', 'intact'],
+                             default='shuffled',
+                             help="Order of the held-out test windows (default: shuffled)")
+    eval_parser.add_argument("--test-shuffle-seed", type=int, default=42,
+                             help="Seed for the test-window permutation (default: 42)")
+    eval_parser.add_argument("--exp-name", type=str,
+                             help="Experiment name the runs were trained under")
+    eval_parser.add_argument("--output-dir", type=str,
+                             help="Where the trained runs live (default: outputs)")
+    eval_parser.add_argument("--cohort", type=str, choices=['male', 'female'],
+                             help="Cohort the runs were trained on (default: male)")
+    eval_parser.add_argument("--shuffle", type=str, choices=['none', 'labels', 'sequences'],
+                             help="Shuffle control the runs were trained with (default: none)")
+    eval_parser.add_argument("--shuffle-seed", type=int,
+                             help="Shuffle seed the runs were trained with (default: 42)")
+    eval_parser.add_argument("--shuffle-scope", type=str, choices=['fit', 'all'],
+                             help="Sequence-shuffle scope the runs were trained with "
+                                  "(default: fit)")
+    eval_parser.add_argument("--dry-run", action="store_true",
+                             help="Print the commands without running them")
 
     # Anything this CLI does not define is forwarded verbatim to retrobert.main,
     # so every argument in retrobert/config.py stays reachable from here.
@@ -170,6 +252,8 @@ def main():
         return 1
     if args.command == "train":
         return train_command(args)
+    if args.command == "evaluate":
+        return evaluate_command(args)
     return 1
 
 

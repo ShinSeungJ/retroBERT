@@ -7,7 +7,8 @@ import argparse
 
 from torch.utils.data import DataLoader
 
-from .config import ARGS_STR, add_default_args, resolve_args
+from .config import (ARGS_STR, add_default_args, resolve_args, shuffle_description,
+                     test_order_description)
 from .data import retroBERTdataset
 from .inference import run_test
 from .log import (print_fold_header, print_hyperparameters, print_saved,
@@ -38,6 +39,11 @@ def main():
     fold_results_dir = os.path.join(args.output_dir, args.exp_name, 'fold_results')
     os.makedirs(fold_results_dir, exist_ok=True)
 
+    # A sequence shuffle always permutes the fitting splits (train + validation); with
+    # --shuffle_scope all it permutes the held-out test windows too.
+    shuffle_fit_sequences = args.shuffle == 'sequences'
+    shuffle_test_sequences = shuffle_fit_sequences and args.shuffle_scope == 'all'
+
     for fold in range(1, num_folds + 1):
         args.save_model_path = os.path.join(args.output_dir, args.exp_name, f"fold{fold}")
         os.makedirs(args.save_model_path, exist_ok=True)
@@ -51,12 +57,15 @@ def main():
 
         train_dataset = retroBERTdataset(data_dir=fold_dirs['train'], label_file=label_file,
                                          is_train=True, is_test=False,
-                                         shuffle_targets=(args.shuffle == 'labels'), args=args)
+                                         shuffle_targets=(args.shuffle == 'labels'),
+                                         shuffle_sequences=shuffle_fit_sequences, args=args)
         valid_dataset = retroBERTdataset(data_dir=fold_dirs['valid'], label_file=label_file,
                                          is_train=False, is_test=False,
-                                         shuffle_targets=(args.shuffle == 'labels'), args=args)
+                                         shuffle_targets=(args.shuffle == 'labels'),
+                                         shuffle_sequences=shuffle_fit_sequences, args=args)
         test_dataset = retroBERTdataset(data_dir=fold_dirs['test'], label_file=label_file,
-                                        is_train=False, is_test=True, args=args)
+                                        is_train=False, is_test=True,
+                                        shuffle_sequences=shuffle_test_sequences, args=args)
         train_dataset, valid_dataset, train_scaler = prepare_datasets_with_scaling(
             train_dataset, valid_dataset, args)
 
@@ -106,7 +115,9 @@ def main():
             'max_seq_length': args.max_seq_length,
             'input_dim': args.input_dim,
             'shuffle': args.shuffle if args.shuffle == 'none'
-                       else f"{args.shuffle} (seed={args.shuffle_seed})",
+                       else shuffle_description(args.shuffle, args.shuffle_seed,
+                                                args.shuffle_scope),
+            'test_order': test_order_description(shuffle_test_sequences, args.shuffle_seed),
             'per_fold': {k: results[k] for k in ('file_acc', 'file_f1', 'roc_auc')},
             'seed_mean': seed_summary(results),
         }, fh, indent=2)

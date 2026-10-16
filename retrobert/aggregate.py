@@ -9,6 +9,10 @@ Usage
     # every seed of one experiment
     python -m retrobert.aggregate --exp retrobert_pose --cohort male --seeds 17 23 41 68 92
 
+    # a sequence-shuffle control, or a re-scoring written by evaluate
+    python -m retrobert.aggregate --exp retrobert_pose --seeds 17 23 41 68 92 --shuffle sequences --shuffle_scope all
+    python -m retrobert.aggregate --exp retrobert_pose --seeds 17 23 41 68 92 --results_dir eval_testshuffle42
+
     # or point it straight at the json files
     python -m retrobert.aggregate outputs/*/fold_results/summary_metrics.json
 """
@@ -21,18 +25,22 @@ import sys
 from .log import print_aggregate
 
 
-def find_metrics(exp, cohort, seeds, output_dir, shuffle='none', shuffle_seed=42):
+def find_metrics(exp, cohort, seeds, output_dir, shuffle='none', shuffle_seed=42,
+                 shuffle_scope='fit', results_dir='fold_results'):
     """Locate one summary_metrics.json per seed, by exact run name.
 
     No wildcard: a pattern like <exp>_42* would also match the shuffle controls of
-    seed 42, and <exp>_4* would match seed 42.
+    seed 42, and <exp>_4* would match seed 42. `results_dir` selects the training
+    results ('fold_results') or a re-scoring written by `evaluate` (e.g.
+    'eval_testshuffle42').
     """
     from .config import run_name
 
     paths = []
     for seed in seeds:
-        path = os.path.join(output_dir, run_name(exp, cohort, seed, shuffle, shuffle_seed),
-                            'fold_results', 'summary_metrics.json')
+        path = os.path.join(output_dir,
+                            run_name(exp, cohort, seed, shuffle, shuffle_seed, shuffle_scope),
+                            results_dir, 'summary_metrics.json')
         if not os.path.exists(path):
             print(f"  seed {seed}: no metrics found at {path} -- skipped")
             continue
@@ -74,6 +82,11 @@ def main():
                     choices=['none', 'labels', 'sequences'],
                     help='Aggregate this shuffle control instead of the real runs')
     ap.add_argument('--shuffle_seed', type=int, default=42)
+    ap.add_argument('--shuffle_scope', type=str, default='fit', choices=['fit', 'all'],
+                    help='Scope of the sequence shuffle to aggregate')
+    ap.add_argument('--results_dir', type=str, default='fold_results',
+                    help="Per-run results directory: 'fold_results' for training, or an "
+                         "evaluate output such as 'eval_testshuffle42'")
     opt = ap.parse_args()
 
     paths = opt.paths
@@ -81,7 +94,8 @@ def main():
         if not (opt.exp and opt.seeds):
             ap.error("give json paths, or --exp together with --seeds")
         paths = find_metrics(opt.exp, opt.cohort, opt.seeds, opt.output_dir,
-                             opt.shuffle, opt.shuffle_seed)
+                             opt.shuffle, opt.shuffle_seed, opt.shuffle_scope,
+                             opt.results_dir)
 
     return 0 if aggregate(paths) else 1
 

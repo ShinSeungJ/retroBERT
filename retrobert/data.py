@@ -18,6 +18,7 @@ class retroBERTdataset(Dataset):
             is_train=None,
             is_test=None,
             shuffle_targets=False,
+            shuffle_sequences=False,
             args=None,
         ):
 
@@ -28,10 +29,11 @@ class retroBERTdataset(Dataset):
         self.num_frames = getattr(args, 'num_frames', args.max_seq_length - 1)
         self.step_size = self.num_frames // 2
 
-        # Negative controls. shuffle_targets permutes this split's animal<->label
-        # links; shuffle_sequences permutes the frame order inside every window.
+        # Negative controls, set per split by the caller. shuffle_targets permutes this
+        # split's animal<->label links; shuffle_sequences permutes the frame order inside
+        # every window (main.py decides which splits get it from --shuffle_scope).
         self.shuffle_targets = shuffle_targets
-        self.shuffle_sequences = getattr(args, 'shuffle', 'none') == 'sequences'
+        self.shuffle_sequences = shuffle_sequences
         self.shuffle_seed = getattr(args, 'shuffle_seed', 0)
 
         self.data_list, self.label_list = self.load_data_labels(data_dir, label_file)

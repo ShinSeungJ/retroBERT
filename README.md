@@ -243,6 +243,8 @@ To re-aggregate later, or to combine a different set of seeds:
 ```bash
 python -m retrobert.aggregate --exp retrobert_pose --cohort male --seeds 17 23 41 68 92
 python -m retrobert.aggregate --exp retrobert_pose --cohort female --seeds 17 23 41 68 92 --shuffle labels --shuffle_seed 42
+python -m retrobert.aggregate --exp retrobert_pose --cohort male --seeds 17 23 41 68 92 --shuffle sequences --shuffle_scope all
+python -m retrobert.aggregate --exp retrobert_pose --cohort male --seeds 17 23 41 68 92 --results_dir eval_testshuffle42
 python -m retrobert.aggregate outputs/*/fold_results/summary_metrics.json
 ```
 
@@ -275,8 +277,12 @@ and evaluation as the real experiment — only the thing being ablated differs:
 # label shuffle: train/validation labels permuted, held-out test labels stay true
 python run_retrobert.py train --shuffle labels --shuffle-seed 42
 
-# sequence shuffle: frame order destroyed within each window
+# sequence shuffle: frame order destroyed within each train/validation window,
+# held-out test windows scored in their true order
 python run_retrobert.py train --shuffle sequences --shuffle-seed 42
+
+# sequence shuffle with the held-out test windows shuffled as well
+python run_retrobert.py train --shuffle sequences --shuffle-seed 42 --shuffle-scope all
 ```
 
 | Control | What is permuted |
@@ -287,8 +293,79 @@ python run_retrobert.py train --shuffle sequences --shuffle-seed 42
 Class counts are preserved, controls are never relabelled, and each permutation is
 deterministic given `--shuffle_seed`, which is independent of `--seed`: build the null
 distribution by varying the shuffle while holding the model seed fixed. Each control
-writes to its own experiment directory (`..._shuffle42`, `..._seqshuffle42`), and a label
-shuffle also gets its own fold directory, so a control can never overwrite the real run.
+writes to its own experiment directory (`..._shuffle42`, `..._seqshuffle42_fit`,
+`..._seqshuffle42_all`), and a label shuffle also gets its own fold directory, so a
+control can never overwrite the real run.
+
+#### Sequence-shuffle scope
+
+`--shuffle-scope` (`--shuffle_scope` on `retrobert.main`) chooses which splits a sequence
+shuffle permutes:
+
+| `--shuffle-scope` | Train + validation windows | Held-out test windows |
+|---|---|---|
+| `fit` (default) | frame order permuted | true order |
+| `all` | frame order permuted | frame order permuted |
+
+`fit` asks whether a model that never saw temporal order can still predict the
+held-out animals as they really behaved; `all` scores it on equally shuffled
+windows, so training and test inputs match. Validation is shuffled under both scopes,
+so checkpoint selection never sees temporal order either. The scope only applies to a
+sequence shuffle — a label shuffle always scores the test set with its true labels, and
+`--shuffle-scope all` is rejected for it.
+
+#### Re-scoring trained runs with shuffled test windows
+
+`evaluate` scores existing checkpoints on their held-out cohorts again, without
+retraining, with the frame order of every test window permuted. Scoring the real runs
+this way gives the remaining cell of the sequence-shuffle design — a model trained on
+intact sequences, tested on shuffled ones:
+
+```bash
+# the real runs of these seeds, test windows shuffled
+python run_retrobert.py evaluate --seeds 17 23 41 68 92
+
+# a sequence-shuffle (fit) run, test windows shuffled
+python run_retrobert.py evaluate --seeds 17 23 41 68 92 --shuffle sequences --shuffle-seed 42
+
+# the same runs with test windows in their true order: reproduces the training score
+python run_retrobert.py evaluate --seeds 17 23 41 68 92 --test-order intact
+```
+
+| Train \ Test | Test windows intact | Test windows shuffled |
+|---|---|---|
+| **Intact** | `train` | `train`, then `evaluate` |
+| **Sequence-shuffled** | `train --shuffle sequences` | `train --shuffle sequences --shuffle-scope all`, or `evaluate` on the `fit` run |
+
+| `evaluate` flag | Meaning |
+|---|---|
+`--seeds` | seeds of the trained runs to re-score (required) |
+`--test-order` | `shuffled` (default) permutes frames within every test window; `intact` keeps their true order |
+`--test-shuffle-seed` | seed of the test permutation (default 42), independent of any seed the run was trained with |
+`--exp-name`, `--cohort`, `--shuffle`, `--shuffle-seed`, `--shuffle-scope` | identify the trained run: pass the values it was trained with |
+
+Each test window is permuted once, with `RandomState(test_shuffle_seed + i)` for the
+animal's `i`-th window;
+in a zero-padded last window only its real frames are moved. Window length, spine
+scaling, the scaler and the split are read back from the run's checkpoints, so they
+always match training. `evaluate` scores `checkpoint_best_f1.pth.tar`, the checkpoint
+training reports, and builds its fold copies in a separate
+`dataset/<cohort>/pose/cohort_strat_fold_eval/`, so it can run alongside training.
+Results go next to the run's own `fold_results/`, and the seeds are aggregated as for
+`train`:
+
+```
+outputs/<exp_name>_<cohort>_<seed>[_<shuffle>]/
+├── fold_results/                  the training run's own scores
+└── eval_testshuffle<seed>/        evaluate --test-order shuffled  (eval_intact/ for intact)
+    ├── fold1.txt ... fold5.txt
+    ├── summary.txt
+    └── summary_metrics.json
+```
+
+Every `summary.txt` and `summary_metrics.json` records the shuffle control and the
+order the test windows were scored in, so a table can always be traced back to the
+cell it belongs to.
 
 ## Repository Structure
 
@@ -305,6 +382,7 @@ shuffle also gets its own fold directory, so a control can never overwrite the r
 │   ├── metric.py              metric computation (no printing)
 │   ├── log.py                 all console output (no metric computation)
 │   ├── main.py                leave-one-cohort-out entry point
+│   ├── evaluate.py            re-score trained runs, optionally with shuffled test windows
 │   ├── aggregate.py           combine seeds into one mean ± SD table
 │   └── utils/
 │       ├── __init__.py

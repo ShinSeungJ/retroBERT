@@ -166,21 +166,24 @@ def map_filenames_to_labels(susceptible_dir, resilient_dir):
             filename_label_map[file] = 1
     return filename_label_map
 
-def setup_kfold_experiment(args):
+def setup_kfold_experiment(args, save_dataset_dir=None):
     """Build the leave-one-cohort-out fold directories for the selected dataset.
 
     The number of folds is the number of distinct cohorts found in the filenames, so a
     dataset with two cohorts yields two folds without anything being declared.
+    `save_dataset_dir` overrides where the fold copies are written (evaluate uses its
+    own, so re-scoring never touches a training run's folds).
 
     Returns (label_file, save_dataset_dir, cohort_ids).
     """
     label_file = os.path.join(args.cohort_dir, "SIratio.xlsx")
-    save_dataset_dir = os.path.join(args.data_dir, 'cohort_strat_fold')
+    if save_dataset_dir is None:
+        save_dataset_dir = os.path.join(args.data_dir, 'cohort_strat_fold')
 
-    # A label-shuffle run gets its own fold directory, so it can never race or
-    # overwrite the real run's splits.
-    if args.shuffle == 'labels':
-        save_dataset_dir = f"{save_dataset_dir}_shuffle{args.shuffle_seed}"
+        # A label-shuffle run gets its own fold directory, so it can never race or
+        # overwrite the real run's splits.
+        if args.shuffle == 'labels':
+            save_dataset_dir = f"{save_dataset_dir}_shuffle{args.shuffle_seed}"
 
     susceptible_files = get_csv_files(os.path.join(args.data_dir, 'preS'))
     resilient_files = get_csv_files(os.path.join(args.data_dir, 'preR'))
