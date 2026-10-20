@@ -119,9 +119,9 @@ frame count:
 
 ### Longer windows do better, up to what the GPU allows
 
-Window length was swept at 20 fps. Pooled file-level ROC-AUC:
+Window length was swept at 20 fps. AUC:
 
-| Window | `--max_seq_length` | Pooled ROC-AUC |
+| Window | `--max_seq_length` | AUC |
 |---|---|---|
 | 32 frames | 32 | 0.645 |
 | 64 frames | 64 | 0.667 |

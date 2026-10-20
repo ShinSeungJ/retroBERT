@@ -12,6 +12,10 @@ class retroBERT(nn.Module):
         self.cls_token = nn.Parameter(torch.zeros(1, 1, bert_dim))
         self.embedding = self.BERTembedding(input_dim, bert_dim)
 
+        config_kwargs = {}
+        if max_seq_length > 512:
+            config_kwargs['max_position_embeddings'] = max_seq_length
+
         bare_config = BertConfig(
             vocab_size=30522,
             hidden_size=768,
@@ -19,6 +23,7 @@ class retroBERT(nn.Module):
             num_attention_heads=12,
             intermediate_size=3072,
             num_labels=2,
+            **config_kwargs,
         )
 
         self.bert = BertForSequenceClassification(bare_config)
