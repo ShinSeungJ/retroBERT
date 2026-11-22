@@ -76,7 +76,7 @@ def test(model, test_dir, test_dataset, filename_label_map, scaler, args, thresh
 
     print_prediction_header(title, threshold)
 
-    for filename in os.listdir(test_dir):
+    for filename in sorted(os.listdir(test_dir)):
         if filename.endswith('.csv'):
             filepath = os.path.join(test_dir, filename)
             final_decision, final_prediction, weighted_scores, vote_prediction, sequence_preds = process_csv_file(

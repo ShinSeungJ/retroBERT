@@ -133,13 +133,18 @@ def print_prediction_header(title, threshold):
         print(title)
         print(f"{'='*70}")
     print(f"Final Predictions (threshold={threshold:.4f}):")
-    print("Filename  | Prediction | Confidence | Accuracy |    Vote | Raw Score")
+    header = (f"{'File':<12} | {'Prediction':<11} | {'Confidence':>10} | "
+              f"{'Accuracy':>8} | {'Vote':<11} | {'Raw Score':>9}")
+    print(header)
+    print('-' * len(header))
 
 
+# Fixed column widths, plain ASCII: the rows line up with the header in any terminal
+# or log viewer, whatever it does with wide or non-ASCII characters.
 def print_prediction_row(filename, prediction_result, confidence, file_accuracy,
                          vote_result, final_prediction):
-    print(f"{filename}: {prediction_result:<11}|  {confidence*100:6.2f}%   | "
-          f"{file_accuracy*100:6.2f}%  | {vote_result:<11}| {final_prediction:+.5f}")
+    print(f"{filename:<12} | {prediction_result:<11} | {confidence*100:>9.2f}% | "
+          f"{file_accuracy*100:>7.2f}% | {vote_result:<11} | {final_prediction:>+9.5f}")
 
 
 def print_incorrect_files(incorrect_files):
@@ -241,22 +246,27 @@ def print_hyperparameters(args, loss_name, fold_warmup_steps_log, fold_total_ste
     print(f"  Early stop patience  : {args.early_stop_patience if args.early_stop_patience > 0 else 'disabled'}")
 
 
-def print_summary(bucket, num_folds, width=64):
+def _pm(mean, sd, digits):
+    """'mean +/- sd' in plain ASCII, so table columns stay aligned in any viewer."""
+    return f"{mean:.{digits}f} +/- {sd:.{digits}f}"
+
+
+def print_summary(bucket, num_folds, width=70):
     """Accuracy, macro-F1 and AUROC, mean +/- std across folds."""
     print(f"\n{'='*width}")
     print(f"K-FOLD {num_folds} SUMMARY (mean +/- std across folds)")
     print(f"{'='*width}")
-    print(f"{'Model':<14} {'Acc':<15} {'F1':<15} {'AUROC'}")
+    print(f"{'Model':<12} {'Acc (%)':<18} {'F1 (%)':<18} {'AUROC'}")
     print(f"{'-'*width}")
     if bucket['file_acc']:
-        acc = f"{np.mean(bucket['file_acc'])*100:.2f}±{np.std(bucket['file_acc'])*100:.2f}"
-        f1 = f"{np.mean(bucket['file_f1'])*100:.2f}±{np.std(bucket['file_f1'])*100:.2f}"
-        auroc = f"{np.nanmean(bucket['roc_auc']):.3f}±{np.nanstd(bucket['roc_auc']):.3f}"
-        print(f"{'Best Model':<14} {acc:<15} {f1:<15} {auroc}")
+        acc = _pm(np.mean(bucket['file_acc'])*100, np.std(bucket['file_acc'])*100, 2)
+        f1 = _pm(np.mean(bucket['file_f1'])*100, np.std(bucket['file_f1'])*100, 2)
+        auroc = _pm(np.nanmean(bucket['roc_auc']), np.nanstd(bucket['roc_auc']), 3)
+        print(f"{'Best Model':<12} {acc:<18} {f1:<18} {auroc}")
     print(f"{'='*width}")
 
 
-def print_aggregate(records, width=64):
+def print_aggregate(records, width=70):
     """Mean +/- sample SD across seeds, from the per-seed summary_metrics.json files."""
     seeds = [r['seed'] for r in records]
     first = records[0]
@@ -276,10 +286,8 @@ def print_aggregate(records, width=64):
     print(f"  Test windows         : {first.get('test_order', 'not recorded')}")
     print(f"  +/- is sample SD (ddof=1) across seeds")
     print(f"{'-'*width}")
-    print(f"{'Model':<14} {'Acc':<15} {'F1':<15} {'AUROC'}")
+    print(f"{'Model':<12} {'Acc (%)':<18} {'F1 (%)':<18} {'AUROC'}")
     print(f"{'-'*width}")
-    print(f"{'Best Model':<14} "
-          f"{f'{acc[0]*100:.2f}±{acc[1]*100:.2f}':<15} "
-          f"{f'{f1[0]*100:.2f}±{f1[1]*100:.2f}':<15} "
-          f"{f'{auroc[0]:.3f}±{auroc[1]:.3f}'}")
+    print(f"{'Best Model':<12} {_pm(acc[0]*100, acc[1]*100, 2):<18} "
+          f"{_pm(f1[0]*100, f1[1]*100, 2):<18} {_pm(auroc[0], auroc[1], 3)}")
     print(f"{'='*width}")
